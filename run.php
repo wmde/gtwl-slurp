@@ -19,4 +19,4 @@ $slurper = new GtwlSlurp\Slurper( array(
 	// Note: Uncomment to translate the output to english! :D
 	'translate' => 'en',
 ) );
-$slurper->run();
+echo $slurper->run();

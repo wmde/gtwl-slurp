@@ -38,15 +38,15 @@ class Slurper{
 		echo "Running\n";
 		$pageTitles = $this->getAllSubPageTitles();
 
-		$results = array();
+		$data = array();
 
 		foreach( $pageTitles as $pageTitle ) {
-			foreach( $this->getVotesForPage( $pageTitle ) as $wish => $voters ) {
-				$results[$wish] = count( $voters );
+			foreach( $this->getDataForPage( $pageTitle ) as $wish => $wishData ) {
+				$data[$wish] = $wishData;
 			}
 		}
 
-		$this->output( $results );
+		return $this->output( $data );
 	}
 
 	private function output( $result ) {
@@ -56,25 +56,25 @@ class Slurper{
 		$tableRows = array();
 
 		$total = 0;
-		foreach( $result as $wishName => $voters ) {
+		foreach( $result as $wishName => $data ) {
 			if( $this->translate ) {
 				$wishName = $this->translate->translate( $wishName );
 			}
-			$tableRows[] = array( $wishName, $voters );
-			$total += $voters;
+			$link = '[[' . $data['link'] . '|' . $wishName . ']]';
+			$tableRows[] = array( $data['votes'], $link );
+			$total += $data['votes'];
 		}
 
 		$table = new WikiTable(
-			array( 'Wish', 'Votes' ),
+			array( "Votes ($total)", 'Wish(' . count( $tableRows ) . ')' ),
 			$tableRows,
 			array( 'title' => 'GTWL Votes' )
 		);
 
-		echo $table . "\n";
-		echo "Total Votes: $total\n";
+		return $table;
 	}
 
-	private function getVotesForPage( $pageTitle ) {
+	private function getDataForPage( $pageTitle ) {
 		$page = $this->site->newPageGetter()->getFromTitle( $pageTitle );
 		$text = $page->getRevisions()->getLatest()->getContent()->getData();
 
@@ -89,11 +89,16 @@ class Slurper{
 			die();
 		}
 
-		$votes = array();
+		$data = array();
 		foreach( $split as $key => $wishSection ) {
-			$wishName = $headings[$key];
+			$wishName = trim($headings[$key]);
 			$wishSectionSplit = preg_split( '/\n;Unterstützung/i', $wishSection );
 			$voteSection = $wishSectionSplit[1];
+
+			$data[$wishName]['users'] = array();
+			$data[$wishName]['votes'] = 0;
+			$data[$wishName]['link'] = $pageTitle . '#' . $wishName;
+
 			foreach( explode( "\n", $voteSection ) as $line ) {
 				if(
 					// Require the {{pro}} template
@@ -101,12 +106,13 @@ class Slurper{
 					// Require a user / user talk link
 					preg_match( $this->getUserLinkRegex(), $line, $userMatches )
 				) {
-					$votes[trim($wishName)][] = $userMatches[2];
+					$data[$wishName]['users'][] = $userMatches[2];
+					$data[$wishName]['votes'] += 1;
 				}
 			}
 		}
 
-		return $votes;
+		return $data;
 	}
 
 	private function getProTemplateRegex() {
@@ -135,7 +141,7 @@ class Slurper{
 
 		$pageSubTitles = array();
 		foreach( $matches[1] as $match ) {
-			$pageSubTitles[] = $this->getSubArticle( $match );
+			$pageSubTitles[] = $this->getSubArticle( trim( $match ) );
 		}
 
 		return $pageSubTitles;
