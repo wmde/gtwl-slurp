@@ -53,14 +53,24 @@ class Slurper{
 		asort( $result );
 		$result = array_reverse( $result, true );
 
+		$tableRows = array();
+
 		$total = 0;
 		foreach( $result as $wishName => $voters ) {
 			if( $this->translate ) {
 				$wishName = $this->translate->translate( $wishName );
 			}
-			echo "$voters - $wishName\n";
+			$tableRows[] = array( $wishName, $voters );
 			$total += $voters;
 		}
+
+		$table = new WikiTable(
+			array( 'Wish', 'Votes' ),
+			$tableRows,
+			array( 'title' => 'GTWL Votes' )
+		);
+
+		echo $table . "\n";
 		echo "Total Votes: $total\n";
 	}
 
