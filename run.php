@@ -18,5 +18,8 @@ $slurper = new GtwlSlurp\Slurper( array(
 	// TODO cli var?
 	// Note: Uncomment to translate the output to english! :D
 	'translate' => 'en',
+	'highlight' => 20,
 ) );
+
+echo "Running\n";
 echo $slurper->run();

@@ -16,13 +16,21 @@ class Slurper{
 	private $site;
 
 	/**
-	 * @var TranslateClient
+	 * @var TranslateClient|null
 	 */
 	private $translate;
+
+	/**
+	 * @var int
+	 */
+	private $highlight = 0;
 
 	public function __construct( $config ) {
 		if( array_key_exists( 'translate', $config ) ) {
 			$this->translate = new TranslateClient( 'de', $config['translate'] );
+		}
+		if( array_key_exists( 'highlight', $config ) ) {
+			$this->highlight = $config['highlight'];
 		}
 
 		$api = new MediawikiApi( 'https://' . $this->domain . '/w/api.php' );
@@ -35,7 +43,6 @@ class Slurper{
 	}
 
 	public function run() {
-		echo "Running\n";
 		$pageTitles = $this->getAllSubPageTitles();
 
 		$data = array();
@@ -56,12 +63,19 @@ class Slurper{
 		$tableRows = array();
 
 		$total = 0;
+		$wishCounter = 0;
 		foreach( $result as $wishName => $data ) {
+			$wishCounter += 1;
 			if( $this->translate ) {
 				$wishName = $this->translate->translate( $wishName );
 			}
 			$link = '[[' . $data['link'] . '|' . $wishName . ']]';
-			$tableRows[] = array( $data['votes'], $link );
+			$voteCount = $data['votes'];
+			if( $this->highlight >= $wishCounter ) {
+				$link = "'''" . $link . "'''";
+				$voteCount = "'''" . $voteCount . "'''";
+			}
+			$tableRows[] = array( $voteCount, $link );
 			$total += $data['votes'];
 		}
 
