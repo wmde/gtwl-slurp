@@ -140,7 +140,7 @@ class Slurper{
 	}
 
 	private function getUserLinkRegex() {
-		$namespaces = array( 'User', 'Benutzer', 'Benutzer Diskussion', 'User Talk' );
+		$namespaces = array( 'User', 'Benutzer', 'Benutzerin', 'Benutzer Diskussion', 'Benutzerin Diskussion', 'User Talk' );
 
 		$nsPart = '(' . implode( '|', $namespaces ) . '):';
 
